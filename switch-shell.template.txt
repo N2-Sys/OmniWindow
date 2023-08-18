@@ -1,0 +1,9 @@
+ucli
+pm
+port-add 17/0 100G rs
+port-add 18/0 100G rs
+port-enb 17/0
+port-enb 18/0
+show
+end
+exit

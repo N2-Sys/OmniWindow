@@ -1,0 +1,12 @@
+find_package(Threads REQUIRED)
+link_libraries(Threads::Threads)
+link_libraries(omniwindow-sim)
+
+add_executable(new_tcp_connections new_tcp_connections.cpp)
+add_executable(ssh_brute ssh_brute.cpp)
+add_executable(superspreader superspreader.cpp)
+add_executable(port_scan port_scan.cpp)
+add_executable(ddos ddos.cpp)
+add_executable(syn_flood syn_flood.cpp)
+add_executable(completed_flow completed_flow.cpp)
+add_executable(slowloris_attack slowloris_attack.cpp)

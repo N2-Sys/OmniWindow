@@ -1,0 +1,27 @@
+Threshold: 10
+
+TW1
+  Num Epoch 1
+  Baseline Abnormal avg. 106.000000
+  Precision avg. 1.000000
+  Recall avg. 0.971698
+TW2
+  Num Epoch 1
+  Baseline Abnormal avg. 106.000000
+  Precision avg. 1.000000
+  Recall avg. 0.971698
+OTW
+  Num Epoch 1
+  Baseline Abnormal avg. 106.000000
+  Precision avg. 0.962617
+  Recall avg. 0.971698
+ITW
+  Num Epoch 1
+  Baseline Abnormal avg. 106.000000
+  Precision avg. 1.000000
+  Recall avg. 0.971698
+OSW
+  Num Epoch 1
+  Baseline Abnormal avg. 106.000000
+  Precision avg. 0.954545
+  Recall avg. 0.990566

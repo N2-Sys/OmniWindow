@@ -16,20 +16,19 @@ The OmniWindow project repository includes:
 * **`Exp-2/`**: codes for Exp#2 in the paper.
 * **`Exp-dc/`**: codes for Exp#6 and Exp#8 in the paper.
 * **`include/`, `lib/`**: supportive source code of the OmniWindow host program.
-
-- **`p4-include/`**: supportive source code of the OmniWindow switch program.
-- **`results/`**: directory that contains the experiment results.
-- **`tools/`**: A tool for sending trace traffic.
-- `CMakeLists.txt`
-- `README.md`
-- `switch-shell.template.txt`, `switch-config.template.json`: configuration template files of the switch.
+* **`p4-include/`**: supportive source code of the OmniWindow switch program.
+* **`results/`**: directory that contains the experiment results.
+* **`tools/`**: A tool for sending trace traffic.
+* `CMakeLists.txt`
+* `README.md`
+* `switch-shell.template.txt`, `switch-config.template.json`: configuration template files of the switch.
 
 
 
 
 ## 3. Environment requirement
 
-**Note for SIGCOMM'23 artifact evaluation process: We can provide a testbed if needed (could help skip the preparation for the hardware and software environments). See **<u>**7. Contact**</u> 
+**Note for SIGCOMM'23 artifact evaluation process: We can provide a testbed if needed (could help skip the preparation for the hardware and software environments). See <u>7. Contact</u>**
 
 ### 3.1 Testbed
 
@@ -71,8 +70,7 @@ The OmniWindow project repository includes:
 
 * **Trace data**
 
-    We provide an archive including processed CAIDA trace file for running experiments. Due to the large size of the data, **please download and extract it to the `${OmniWindow_dir}/data/` directory**. [link1-PKU Drive](https://disk.pku.edu.cn:443/link/4F31A59379FCC985000CB4ED0FDC8129
-    Valid Until: 2023-12-31 23:59) [link2-Google Drive](https://drive.google.com/file/d/13DgBg6-xR1reF0Mmm5Tv34y4UwsxpcaL/view?usp=sharing)
+    We provide an archive including processed CAIDA trace file for running experiments. Due to the large size of the data, **please download and extract it to the `${OmniWindow_dir}/data/` directory**. [link1-PKU Drive](https://disk.pku.edu.cn:443/link/4F31A59379FCC985000CB4ED0FDC8129), [link2-Google Drive](https://drive.google.com/file/d/13DgBg6-xR1reF0Mmm5Tv34y4UwsxpcaL/view?usp=sharing)
 
 
 ### 3.2 Build and configure

@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-OmniWindow is a general and efficient framework for network telemetry to support general and efficient window mechanisms. OmniWindow supports different types of window mechanisms (e.g., tumbling window and sliding window) and variable window size. OmniWindow can be integrated with different types of network telemetry solutions, e.g., query-driven network telemetry and sketch-based telemetry algorithms.
+OmniWindow is a general and efficient framework for network telemetry to support general and efficient window mechanisms. OmniWindow supports different types of window mechanisms (e.g., tumbling window and sliding window) and variable window sizes. OmniWindow can be integrated with different types of network telemetry solutions, e.g., query-driven network telemetry and sketch-based telemetry algorithms. We have integrated OmniWindow into Sonata's queries [SIGCOMM'18], i.e., both the C-language simulations and the Tofino P4 implementations.
 
 
 
@@ -10,12 +10,12 @@ OmniWindow is a general and efficient framework for network telemetry to support
 
 The OmniWindow project repository includes:
 
-* **`apps/`**: OmniWindow source code of a sample application.
+* **`apps/`**: OmniWindow source code of Sonata's queries.
 * **`data/`**: directory that contains the processed CAIDA trace.
 * **`Exp-1/`**: codes for Exp#1 in the paper.
 * **`Exp-2/`**: codes for Exp#2 in the paper.
 * **`Exp-dc/`**: codes for Exp#6 and Exp#8 in the paper.
-* **`include/`, `lib/`**: supportive source code of the OmniWindow host program.
+* **`include/`, `lib/`**: supportive source code of the OmniWindow controller program.
 * **`p4-include/`**: supportive source code of the OmniWindow switch program.
 * **`results/`**: directory that contains the experiment results.
 * **`tools/`**: A tool for sending trace traffic.
@@ -36,7 +36,7 @@ The OmniWindow project repository includes:
 
   - An Intel Tofino switch.
   - Two servers with a DPDK-compatible and RoCE-capable NIC (we used a Mellanox CX5 for 100GbE) and multi-core CPU, connected by the Tofino switch.
-  - Network Topology: Server1 --- Switch --- Server2, where Server1 and Server2 work as the OmniWindow host controller and a receiver, respectively.
+  - Network Topology: Server1 --- Switch --- Server2. Server 1 works as the OmniWindow controller, which (1) injects the network traffic to be monitored into the network; (2) collects the telemetry data of each sub-window; (3) merges the results of sub-windows into the complete window as needed. Server 2 receives the monitored network traffic.
 
 - **Software requirements**
 
@@ -44,24 +44,26 @@ The OmniWindow project repository includes:
 
   - Switch
 
-    - Tofino SDE 9.7.0
+    - OS: ONL 2 (kernel: 4.19.81)
+    - Tofino SDE 9.7.0 (all other software dependencies should satisfy the requirements of SDE 9.7.0)
+    - **Hint**: Newer versions of the OS and SDE (e.g., ubuntu 20.04 with SDE 9.13.1) should work correctly. However, we have not fully verified this in other environments.
 
   - Server (Ubuntu 20.04)
 
     - [MLNX_OFED_LINUX](https://network.nvidia.com/products/infiniband-drivers/linux/mlnx_ofed/):  **Make sure the OFED version is equal to or greater than the kernel version.**
-
+  
         ```sh
         tar xf MLNX_OFED_LINUX-5.7-1.0.2.0-ubuntu20.04-x86_64.tgz
         cd MLNX_OFED_LINUX-5.7-1.0.2.0-ubuntu20.04-x86_64
         sudo ./mlnxofedinstall --dpdk
         ```
 
-    - DPDK [21.11.4](http://core.dpdk.org/download/):
-
+    - DPDK [21.11.5](http://core.dpdk.org/download/):
+  
         ```sh
         sudo apt install libpcap-dev meson python3-pyelftools ninja-build libnuma-dev -y
-        tar xf dpdk-21.11.4.tar.xz
-        cd dpdk-stable-21.11.4
+        tar xf dpdk-21.11.5.tar.xz
+        cd dpdk-stable-21.11.5
         meson build
         cd build
         ninja
@@ -77,9 +79,9 @@ The OmniWindow project repository includes:
 
 **Build**
 
-You need to clone and build the project on both the OmniWindow host and the switch.
+You need to clone and build the project on both the OmniWindow controller and the switch.
 
-- On the OmniWindow host:
+- On the OmniWindow controller:
     ```sh
     git clone git@github.com:N2-Sys/OmniWindow.git
     cd OmniWindow
@@ -88,15 +90,55 @@ You need to clone and build the project on both the OmniWindow host and the swit
     make -j
     ```
 
+    If the compilation is successful, you can see the following output:
+    
+    ```
+    $ make -j
+    [ 10%] Building CXX object lib/CMakeFiles/dpdk-toolchain-cpp.dir/dpdk_toolchain_cpp.cpp.o
+    [ 20%] Building CXX object lib/CMakeFiles/rdma-tools.dir/RDMA.cpp.o
+    [ 30%] Building CXX object tools/CMakeFiles/trace.dir/trace.cpp.o
+    [ 40%] Linking CXX executable trace
+    [ 50%] Linking CXX static library librdma-tools.a
+    [ 50%] Built target rdma-tools
+    [ 50%] Built target trace
+    [ 60%] Linking CXX static library libdpdk-toolchain-cpp.a
+    [ 60%] Built target dpdk-toolchain-cpp
+    [ 70%] Building CXX object apps/CMakeFiles/new-tcp-connections-sliding-host.dir/new-tcp-connections/host.cpp.o
+    [ 80%] Building CXX object apps/CMakeFiles/new-tcp-connections-tumbling-host.dir/new-tcp-connections/host.cpp.o
+    [ 90%] Linking CXX executable new-tcp-connections-sliding-host
+    [100%] Linking CXX executable new-tcp-connections-tumbling-host
+    [100%] Built target new-tcp-connections-sliding-host
+    [100%] Built target new-tcp-connections-tumbling-host
+    ```
+    
 - On the switch:
-    ```sh
+  
+    ```
     git clone git@github.com:N2-Sys/OmniWindow.git
     cd OmniWindow
     mkdir build && cd build
     cmake .. -DIS_SWITCH=ON
     make
     ```
-
+    
+    If the compilation is successful, you can see the following output:
+    
+    ```sh
+    ......
+    Install the project...
+    -- Install configuration: "RelWithDebInfo"
+    -- Up-to-date: /root/bf-sde-9.7.0/install/share/p4/targets/tofino
+    -- Installing: /root/bf-sde-9.7.0/install/share/p4/targets/tofino/switch.conf
+    -- Installing: /root/bf-sde-9.7.0/install/share/p4/targets/tofino/omniwin-new-tcp-connections-tumbling-switch.conf
+    -- Up-to-date: /root/bf-sde-9.7.0/install/share/tofinopd/omniwin-new-tcp-connections-tumbling-switch
+    -- Up-to-date: /root/bf-sde-9.7.0/install/share/tofinopd/omniwin-new-tcp-connections-tumbling-switch/pipe
+    -- Installing: /root/bf-sde-9.7.0/install/share/tofinopd/omniwin-new-tcp-connections-tumbling-switch/pipe/context.json
+    -- Installing: /root/bf-sde-9.7.0/install/share/tofinopd/omniwin-new-tcp-connections-tumbling-switch/pipe/tofino.bin
+    -- Installing: /root/bf-sde-9.7.0/install/share/tofinopd/omniwin-new-tcp-connections-tumbling-switch/bf-rt.json
+    -- Installing: /root/bf-sde-9.7.0/install/share/tofinopd/omniwin-new-tcp-connections-tumbling-switch/source.json
+    -- Installing: /root/bf-sde-9.7.0/install/share/tofinopd/omniwin-new-tcp-connections-tumbling-switch/events.json
+    [100%] Built target new-tcp-connections-tumbling-switch
+    ```
 
 **Configuration files**
 
@@ -160,7 +202,7 @@ You may clone and build the project on the switch:
     ```
     in which port `17/0` and `18/0` are corresponding to `D_P` of 4 and 12, repectively.
 
-    The `owhost-mac` and `owhost-ip` are the Mac address of the IP address of the OmniWindow host's NIC connected to the switch.
+    The `owhost-mac` and `owhost-ip` are the Mac address of the IP address of the OmniWindow controller's NIC connected to the switch.
 
     After updating,  please rename this script to `switch-config.json`.
 
@@ -170,7 +212,8 @@ You may clone and build the project on the switch:
 
 We use the new-tcp-connections as an example to show the workflow and the time breakdown of OmniWindow (i.e., Exp#4 in our paper).
 
-1. Run the switch program on the **switch**:
+1. **Terminal 1**: Run the switch program on the **switch**:
+    
     ```sh
     # Make sure you are at the ${OmniWindow_DIR}/build/ directory on the switch.
     ./apps/new-tcp-connections-tumbling-switch.sh
@@ -180,39 +223,40 @@ We use the new-tcp-connections as an example to show the workflow and the time b
     ...
     Waiting for the OmniWindow host...
     ```
-
-2. Run the `new-tcp-connections` application on the OmniWindow **host**:
+    
+2. **Terminal 2**: Run the `new-tcp-connections` application on the **OmniWindow controller** :
+    
     ```sh
-    # Make sure you are at the ${OmniWindow-DIR}/build/ directory on the OmniWindow host.
+    # Make sure you are at the ${OmniWindow-DIR}/build/ directory on the OmniWindow controller.
     # sudo ./apps/<program>-host <dpdk-port-id> <host-ip> <rdma-dev> <switch-ctrl-ip> <input-keys>
     sudo ./apps/new-tcp-connections-tumbling-host 0 10.64.100.37 mlx5_0 172.16.112.45 ../data/hotKeys-tumbling.txt
     ```
     * The first parameter is dpdk-port-id.
     
-    * The second parameter is the ip for our NIC.
+    * The second parameter is the IP for our NIC.
     
-    * The third parameter is RDMA device name.
+    * The third parameter is the RDMA device name.
     
-    * The fourth parameter is the switch ip.
-    * The fifth parameter is pre-processed hot keys for testing.
+    * The fourth parameter is the switch IP.
+    * The fifth parameter is pre-processed hotkeys for testing.
     
-    After running the above command, the host screen prints the following information (Note that the `dst_qp`, `rkey`, and  `msg_vaddr_base` vary each time running):
+    After running the above command, the OmniWindow controller screen prints the following information (Note that the `dst_qp`, `rkey`, and  `msg_vaddr_base` vary each time running):
     
     ```
     Init
     dst_qp=0x9e37, rkey=0x69c7b, msg_vaddr_base=0x7f1b09bcd000
     10000 keys inserted
     ```
-    And wait until the following information is printed on the **switch** terminal (and the CLI will then quit):
+    Wait until the following information is printed on the **Terminal 1** (and the CLI will then quit):
     ```
     ...
     10000 keys inserted
     Initialization done.
     ```
     
-3. Open another terminal on the OmniWindow host, and inject the data.
+3. Open another terminal (**Terminal 3**) on the OmniWindow controller, and inject the data.
     ```sh
-    # Make sure you are at the ${OmniWindow_DIR}/build/ directory on the OmniWindow host.
+    # Make sure you are at the ${OmniWindow_DIR}/build/ directory on the OmniWindow controller.
     # For example, we are injecting the trace through device ens85f0.
     # The 100000 and 5 here are the subwindow length (in us) and the number of subwindows, repectively.
     sudo ./tools/trace ../data/trace.pcap ens85f0 100000 5
@@ -220,20 +264,85 @@ We use the new-tcp-connections as an example to show the workflow and the time b
 
     Here, to simulate Exp #4 in our manuscript to investigate the breakdown of OmniWindow, we replay the trace in each sub-window manually.
 
-    After each subwindow, press Enter (or input the number of recirculation packets, 16 by default, and then Enter) to the host program to collect. After finished, press Enter to the trace injector to advance to the next subwindow.
+    After each subwindow, press Enter (or input the number of recirculation packets, 16 by default, and then Enter) at **Terminal 2** for the OmniWindow controller to collect telemetry data. Then, press Enter to the trace injector at **Terminal 3** to advance to the next subwindow. 
 
     In the actual case, the manual trigger can be replaced by a time-based one to switch subwindows automatically.
 
-    The result should be like [results/tumbling.txt](results/tumbling.txt).
+    The result on **Terminal 2** should be like:
 
-4. Press Ctrl-D to quit the host program.
+    ```
+    0 overflow keys
+    11153 messages received (2 Flushes)
+    21151 keys in total
+    recv: 0.000408s, ins: 0.001529s, merge: 0.000015s
+    
+    9215 overflow keys
+    10865 messages received (2 Flushes)
+    38248 keys in total
+    recv: 0.000708s, ins: 0.001100s, merge: 0.000024s
+    
+    6751 overflow keys
+    10737 messages received (2 Flushes)
+    53028 keys in total
+    recv: 0.000663s, ins: 0.001518s, merge: 0.000042s
+    
+    0 overflow keys
+    9551 messages received (2 Flushes)
+    59488 keys in total
+    recv: 0.000402s, ins: 0.001565s, merge: 0.000050s
+    
+    5452 overflow keys
+    10855 messages received (2 Flushes)
+    70606 keys in total
+    recv: 0.000693s, ins: 0.001977s, merge: 0.000068s
+    27561 abnormals detected
+    compare: 0.000165s
+    ```
+    
+    
+    
+4. Press Ctrl-D to quit the OmniWindow controller program.
 
-5. For sliding windows, you can repeat the procedure above, while replacing `new-tcp-connections-tumbling` with `new-tcp-connections-sliding` in step 1 and 2, and replacing `hotKeys-tumbling.txt` with `hotKeys-sliding` in step 2. In addition, you may run the 10 subwindows and see the last 5 ones as the usual case for sliding windows. Therefore, you should set the parameter in step 3:
+5. For sliding windows, you can repeat the procedure above, while replacing `new-tcp-connections-tumbling` with `new-tcp-connections-sliding` in steps 1 and 2, and replacing `hotKeys-tumbling.txt` with `hotKeys-sliding` in step 2. In addition, you may run the 10 subwindows and see the last 5 ones as the usual case for sliding windows. Therefore, you should set the parameter in step 3:
     ```sh
     sudo ./tools/trace ../data/trace.pcap ens85f0 100000 10
     ```
 
-    The result should be like [results/sliding.txt](results/sliding.txt).
+    The result should be like:
+    
+    ```
+    0 overflow keys
+    11765 messages received (2 Flushes)
+    21763 keys in total
+    recv: 0.000410s, ins: 0.001528s, merge: 0.000101s
+    4630 abnormals detected
+    compare: 0.000210s
+    0 keys deleted (original 21763)
+    sub: 0.000064s, find-del: 0.000579s, del: 0.000000s
+    
+    ......
+    
+    5080 overflow keys
+    10682 messages received (2 Flushes)
+    51938 keys in total
+    recv: 0.000491s, ins: 0.001631s, merge: 0.000078s
+    29168 abnormals detected
+    compare: 0.000055s
+    10678 keys deleted (original 62616)
+    sub: 0.000055s, find-del: 0.000051s, del: 0.000776s
+    
+    1890 overflow keys
+    11464 messages received (2 Flushes)
+    51032 keys in total
+    recv: 0.000435s, ins: 0.001914s, merge: 0.000144s
+    35453 abnormals detected
+    compare: 0.000119s
+    11386 keys deleted (original 62418)
+    sub: 0.000139s, find-del: 0.000100s, del: 0.001059s
+    
+    ```
+    
+    
 
 
 
@@ -259,7 +368,7 @@ See [Exp-dc/README.md](Exp-dc/README.md)
 
 ## 6. Known Issue
 
-If your encounter the following output when you run the OmniWindow host program.
+If you encounter the following output when you run the OmniWindow controller program.
 
 ```
 EAL: Detected CPU lcores: 80

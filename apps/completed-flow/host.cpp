@@ -276,7 +276,7 @@ public:
       vKeys = _mm512_load_epi32(keys + i);
       x = _mm512_load_epi32(mergedData + i);
       x1 = _mm512_and_epi32(x, vML);
-      x2 = _mm512_shrdi_epi32(x, _mm512_setzero(), 16);
+      x2 = _mm512_shrdi_epi32(x, _mm512_setzero_epi32(), 16);
       x = _mm512_sub_epi32(x1, x2);
       mAbnormal = _mm512_cmpge_epu32_mask(x, vThres);
       _mm512_mask_compressstoreu_epi32(abnormalKeys + nAbnormal, mAbnormal, vKeys);
@@ -338,7 +338,7 @@ public:
         vKeys = _mm512_load_epi32(keys + i);
         x = _mm512_load_epi32(mergedData + i);
         x1 = _mm512_and_epi32(x, vML);
-        x2 = _mm512_shrdi_epi32(x, _mm512_setzero(), 16);
+        x2 = _mm512_shrdi_epi32(x, _mm512_setzero_epi32(), 16);
         x = _mm512_sub_epi32(x1, x2);
         mAbnormal = _mm512_cmpge_epu32_mask(x, vThres);
         _mm512_mask_compressstoreu_epi32(abnormalKeys + nAbnormal, mAbnormal, vKeys);
@@ -355,7 +355,7 @@ public:
         vKeys = _mm512_load_epi32(keys + i);
         x = _mm512_load_epi32(mergedData + i);
         x1 = _mm512_and_epi32(x, vML);
-        x2 = _mm512_shrdi_epi32(x, _mm512_setzero(), 16);
+        x2 = _mm512_shrdi_epi32(x, _mm512_setzero_epi32(), 16);
         x = _mm512_sub_epi32(x1, x2);
         mAbnormal = _mm512_cmpge_epu32_mask(x, vThres);
         _mm512_mask_compressstoreu_epi32(abnormalKeys + nAbnormal, mAbnormal, vKeys);

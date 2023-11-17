@@ -51,7 +51,7 @@ The OmniWindow project repository includes:
   - Server (Ubuntu 20.04)
 
     - [MLNX_OFED_LINUX](https://network.nvidia.com/products/infiniband-drivers/linux/mlnx_ofed/):  **Make sure the OFED version is equal to or greater than the kernel version.**
-  
+
         ```sh
         tar xf MLNX_OFED_LINUX-5.7-1.0.2.0-ubuntu20.04-x86_64.tgz
         cd MLNX_OFED_LINUX-5.7-1.0.2.0-ubuntu20.04-x86_64
@@ -59,7 +59,7 @@ The OmniWindow project repository includes:
         ```
 
     - DPDK [21.11.5](http://core.dpdk.org/download/):
-  
+
         ```sh
         sudo apt install libpcap-dev meson python3-pyelftools ninja-build libnuma-dev -y
         tar xf dpdk-21.11.5.tar.xz
@@ -91,7 +91,7 @@ You need to clone and build the project on both the OmniWindow controller and th
     ```
 
     If the compilation is successful, you can see the following output:
-    
+
     ```
     $ make -j
     [ 10%] Building CXX object lib/CMakeFiles/dpdk-toolchain-cpp.dir/dpdk_toolchain_cpp.cpp.o
@@ -110,9 +110,9 @@ You need to clone and build the project on both the OmniWindow controller and th
     [100%] Built target new-tcp-connections-sliding-host
     [100%] Built target new-tcp-connections-tumbling-host
     ```
-    
+
 - On the switch:
-  
+
     ```
     git clone git@github.com:N2-Sys/OmniWindow.git
     cd OmniWindow
@@ -120,9 +120,9 @@ You need to clone and build the project on both the OmniWindow controller and th
     cmake .. -DIS_SWITCH=ON
     make
     ```
-    
+
     If the compilation is successful, you can see the following output:
-    
+
     ```sh
     ......
     Install the project...
@@ -212,8 +212,12 @@ You may clone and build the project on the switch:
 
 We use the new-tcp-connections as an example to show the workflow and the time breakdown of OmniWindow (i.e., Exp#4 in our paper).
 
+In this experiment, we will run OmniWindow the switch and the controller.
+We will inject trace into the network by each sub-window, and manually trigger sub-window switching on the controller.
+The data will be collected to the controller, and abnormalies will be detected. Some information of the collected data and detected abnormalies will be shown for testing.
+
 1. **Terminal 1**: Run the switch program on the **switch**:
-    
+
     ```sh
     # Make sure you are at the ${OmniWindow_DIR}/build/ directory on the switch.
     ./apps/new-tcp-connections-tumbling-switch.sh
@@ -223,25 +227,25 @@ We use the new-tcp-connections as an example to show the workflow and the time b
     ...
     Waiting for the OmniWindow host...
     ```
-    
+
 2. **Terminal 2**: Run the `new-tcp-connections` application on the **OmniWindow controller** :
-    
+
     ```sh
     # Make sure you are at the ${OmniWindow-DIR}/build/ directory on the OmniWindow controller.
     # sudo ./apps/<program>-host <dpdk-port-id> <host-ip> <rdma-dev> <switch-ctrl-ip> <input-keys>
     sudo ./apps/new-tcp-connections-tumbling-host 0 10.64.100.37 mlx5_0 172.16.112.45 ../data/hotKeys-tumbling.txt
     ```
     * The first parameter is dpdk-port-id.
-    
+
     * The second parameter is the IP for our NIC.
-    
+
     * The third parameter is the RDMA device name.
-    
+
     * The fourth parameter is the switch IP.
     * The fifth parameter is pre-processed hotkeys for testing.
-    
+
     After running the above command, the OmniWindow controller screen prints the following information (Note that the `dst_qp`, `rkey`, and  `msg_vaddr_base` vary each time running):
-    
+
     ```
     Init
     dst_qp=0x9e37, rkey=0x69c7b, msg_vaddr_base=0x7f1b09bcd000
@@ -253,8 +257,8 @@ We use the new-tcp-connections as an example to show the workflow and the time b
     10000 keys inserted
     Initialization done.
     ```
-    
-3. Open another terminal (**Terminal 3**) on the OmniWindow controller, and inject the data.
+
+3. Open another terminal (**Terminal 3**) on the OmniWindow controller, and inject the trace.
     ```sh
     # Make sure you are at the ${OmniWindow_DIR}/build/ directory on the OmniWindow controller.
     # For example, we are injecting the trace through device ens85f0.
@@ -264,7 +268,7 @@ We use the new-tcp-connections as an example to show the workflow and the time b
 
     Here, to simulate Exp #4 in our manuscript to investigate the breakdown of OmniWindow, we replay the trace in each sub-window manually.
 
-    After each subwindow, press Enter (or input the number of recirculation packets, 16 by default, and then Enter) at **Terminal 2** for the OmniWindow controller to collect telemetry data. Then, press Enter to the trace injector at **Terminal 3** to advance to the next subwindow. 
+    After each subwindow, press Enter (or input the number of recirculation packets, 16 by default, and then Enter) at **Terminal 2** for the OmniWindow controller to collect telemetry data. This will trigger a sub-window switching. Then, press Enter to the trace injector at **Terminal 3** to advance to the next subwindow and inject its trace.
 
     In the actual case, the manual trigger can be replaced by a time-based one to switch subwindows automatically.
 
@@ -275,22 +279,22 @@ We use the new-tcp-connections as an example to show the workflow and the time b
     11153 messages received (2 Flushes)
     21151 keys in total
     recv: 0.000408s, ins: 0.001529s, merge: 0.000015s
-    
+
     9215 overflow keys
     10865 messages received (2 Flushes)
     38248 keys in total
     recv: 0.000708s, ins: 0.001100s, merge: 0.000024s
-    
+
     6751 overflow keys
     10737 messages received (2 Flushes)
     53028 keys in total
     recv: 0.000663s, ins: 0.001518s, merge: 0.000042s
-    
+
     0 overflow keys
     9551 messages received (2 Flushes)
     59488 keys in total
     recv: 0.000402s, ins: 0.001565s, merge: 0.000050s
-    
+
     5452 overflow keys
     10855 messages received (2 Flushes)
     70606 keys in total
@@ -298,9 +302,9 @@ We use the new-tcp-connections as an example to show the workflow and the time b
     27561 abnormals detected
     compare: 0.000165s
     ```
-    
-    
-    
+
+    `overflow keys` stands for keys that cannot be buffered in data plane; `messages` stands for AFRs sent from data plane, or other control messages (only a few); `recv`, `ins`, `merge`, and `compare` stands for the time for receiving AFRs, insertings keys, merging sub-windows, and detecting abnormalies by comparing merged data with the given threshold, respectively. `Flushes` are control messages that notify the control plane for receiving AFRs, whose logging is only for debugging purpose and does not need to be minded by users.
+
 4. Press Ctrl-D to quit the OmniWindow controller program.
 
 5. For sliding windows, you can repeat the procedure above, while replacing `new-tcp-connections-tumbling` with `new-tcp-connections-sliding` in steps 1 and 2, and replacing `hotKeys-tumbling.txt` with `hotKeys-sliding` in step 2. In addition, you may run the 10 subwindows and see the last 5 ones as the usual case for sliding windows. Therefore, you should set the parameter in step 3:
@@ -309,7 +313,7 @@ We use the new-tcp-connections as an example to show the workflow and the time b
     ```
 
     The result should be like:
-    
+
     ```
     0 overflow keys
     11765 messages received (2 Flushes)
@@ -319,9 +323,9 @@ We use the new-tcp-connections as an example to show the workflow and the time b
     compare: 0.000210s
     0 keys deleted (original 21763)
     sub: 0.000064s, find-del: 0.000579s, del: 0.000000s
-    
+
     ......
-    
+
     5080 overflow keys
     10682 messages received (2 Flushes)
     51938 keys in total
@@ -330,7 +334,7 @@ We use the new-tcp-connections as an example to show the workflow and the time b
     compare: 0.000055s
     10678 keys deleted (original 62616)
     sub: 0.000055s, find-del: 0.000051s, del: 0.000776s
-    
+
     1890 overflow keys
     11464 messages received (2 Flushes)
     51032 keys in total
@@ -339,11 +343,18 @@ We use the new-tcp-connections as an example to show the workflow and the time b
     compare: 0.000119s
     11386 keys deleted (original 62418)
     sub: 0.000139s, find-del: 0.000100s, del: 0.001059s
-    
-    ```
-    
-    
 
+    ```
+
+### Hints for integrating OmniWindow framework into telemetry solutions
+
+ The main additional parts of OmniWindow framework are the following ones. To integrate the framework, one may add these parts to the code. The additional code should be similar and we can take `apps/slowloris-attack/switch.p4` as reference and an example:
+ - Management of multiple versions of resources for hiding sub-window switching loss, as line 601 to 613 in our example.
+ - Implementation of `distinct` operators (which may have special logic of reset in our framework), as line 620 to 627 in our example.
+ - The bloom filter to identify new keys, as line 640 to 647 in our example.
+ - The key buffer, as line 653 ti 671 in our example.
+ - The generation of messages to the controller, as line 676 to 713, and also line 743 to 821 for (RDMA), in our example.
+ - The recirculating log of C&R packets, as line 828 to 848 in our example.
 
 
 ## 5. Experiments
